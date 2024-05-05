@@ -1,0 +1,144 @@
+CREATE TABLE Employees (
+    EmpID INT PRIMARY KEY,
+    EmpName VARCHAR(255),
+    Empcontact VARCHAR(255)
+);
+CREATE TABLE Customers (
+    CustID INT PRIMARY KEY,
+    CustName VARCHAR(255),
+    Custcontact VARCHAR(255)
+);
+CREATE TABLE RTables (
+    TableID INT PRIMARY KEY,
+    NumberOfSeats INT,
+    CustID INT,
+    FOREIGN KEY (CustID) REFERENCES Customers(CustID)
+);
+CREATE TABLE Menu (
+    ItemID INT PRIMARY KEY,
+    ItemName VARCHAR(255),
+    Price DECIMAL(10,2)
+);
+
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    CustID INT,
+    TableID INT,
+    ItemID INT,
+    Quantity INT,
+    FOREIGN KEY (CustID) REFERENCES Customers(CustID),
+    FOREIGN KEY (TableID) REFERENCES RTables(TableID),
+    FOREIGN KEY (ItemID) REFERENCES Menu(ItemID)
+);
+
+CREATE TABLE Bills (
+    BillID INT PRIMARY KEY,
+    OrderID INT,
+    TotalAmount DECIMAL(10,2),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+INSERT INTO Employees (EmpID, EmpName, Empcontact)
+VALUES
+    (1521, 'Jadeja', '9312445210'),
+    (1522, 'Virat', '9876543210'),
+    (1523, 'Rohit', '9887412354'),
+    (1524, 'Rahul', '7330601806'),
+    (1525, 'Smriti', '8604587124');
+INSERT INTO Customers (CustID, CustName, Custcontact)
+VALUES
+    (1, 'Maxwell', '4532176432'),
+    (2, 'Pat', '6543987110'),
+    (3, 'Warner', '7724193471'),
+    (4, 'Starc', '5533987114'),
+    (5, 'Head', '8008543754');
+INSERT INTO RTables (TableID, NumberOfSeats, CustID)
+VALUES
+    (101, 4, 4),  -- Table 101 assigned to CustomerID 4 (Starc)
+    (102, 2, 2),  -- Table 102 assigned to CustomerID 2 (Pat)
+    (103, 6, NULL),  -- Table 103 currently not assigned
+    (104, 8, 1),  -- Table 104 assigned to CustomerID 1 (Maxwell)
+    (105, 3, 5),  -- Table 105 assigned to CustomerID 5 (Head)
+    (106, 5, 3);  -- Table 106 assigned to CustomerID 3 (Warner)
+INSERT INTO Menu (ItemID, ItemName, Price)
+VALUES
+    (501, 'Butter Chicken', 350.00),
+    (502, 'Paneer Tikka', 280.00),
+    (503, 'Dal Makhani', 250.00),
+    (504, 'Naan', 40.00),
+    (505, 'Chicken Biryani', 300.00),
+    (506, 'Mutton Biryani', 400.00),
+    (507, 'Chilli Chiken', 320.00),
+    (508, 'Mushroom Masala', 280.00),
+    (509, 'Orange Juice', 80.00);
+ INSERT INTO Orders (OrderID, CustID, TableID, ItemID, Quantity)
+VALUES
+    (1001, 4, 101, 501, 1),  -- Starc orders 1 Butter Chicken at Table 101
+    (1002, 2, 102, 502, 2),  -- Pat orders 2 Paneer Tikka at Table 102
+    (1003, 1, 104, 503, 3),  -- Maxwell orders 3 Dal Makhani at Table 104
+    (1004, 1, 104, 505, 1),  -- Maxwell also orders 1 Chicken Biryani at Table 104
+    (1005, 5, 105, 508, 1),  -- Head orders 1 Mushroom Masala at Table 105
+    (1006, 3, 106, 507, 2),  -- Warner orders 2 Chilli Chicken at Table 106
+    (1007, 1, 104, 501, 2),  -- Maxwell orders 2 Butter Chicken at Table 104
+    (1008, 1, 104, 504, 4),  -- Maxwell orders 4 Naan at Table 104
+    (1009, 3, 106, 506, 1),  -- Warner orders 1 Mutton Biryani at Table 106
+    (1010, 2, 102, 507, 3),  -- Pat orders 3 Chilli Chicken at Table 102
+    (1011, 5, 105, 509, 1),  -- Head orders 1 Orange Juice at Table 105
+    (1012, 2, 102, 509, 11);  -- Pat orders 11 Orange Juice at Table 102
+    
+    
+INSERT INTO Bills (BillID, OrderID, TotalAmount)
+VALUES
+    (2001, 1001, (SELECT Price FROM Menu WHERE ItemID = 501) * 1),
+    (2002, 1002, (SELECT Price FROM Menu WHERE ItemID = 502) * 2),
+    (2003, 1003, (SELECT Price FROM Menu WHERE ItemID = 503) * 3),
+    (2004, 1004, (SELECT Price FROM Menu WHERE ItemID = 505) * 1),
+    (2005, 1005, (SELECT Price FROM Menu WHERE ItemID = 508) * 1),
+    (2006, 1006, (SELECT Price FROM Menu WHERE ItemID = 507) * 2),
+    (2007, 1007, (SELECT Price FROM Menu WHERE ItemID = 501) * 2),  
+    (2008, 1008, (SELECT Price FROM Menu WHERE ItemID = 504) * 4), 
+    (2009, 1009, (SELECT Price FROM Menu WHERE ItemID = 506) * 1),  
+    (2010, 1010, (SELECT Price FROM Menu WHERE ItemID = 507) * 3),  
+    (2011, 1011, (SELECT Price FROM Menu WHERE ItemID = 509) * 1),  
+    (2012, 1012, (SELECT Price FROM Menu WHERE ItemID = 509) * 11); 
+SELECT * FROM Employees;
+SELECT * FROM Customers;
+SELECT * FROM RTables;
+SELECT * FROM Menu;
+SELECT * FROM Orders;
+SELECT * FROM Bills;
+SELECT 
+    C.CustID,
+    C.CustName,
+    R.TableID,
+    SUM(M.Price * O.Quantity) AS TotalAmount
+FROM 
+    Customers C
+JOIN 
+    Orders O ON C.CustID = O.CustID
+JOIN 
+    RTables R ON O.TableID = R.TableID
+JOIN 
+    Menu M ON O.ItemID = M.ItemID
+GROUP BY 
+    C.CustID, C.CustName, R.TableID
+ORDER BY 
+    C.CustID;
+CREATE VIEW CustomerOrderSummary AS
+SELECT 
+    C.CustID,
+    C.CustName,
+    R.TableID,
+    SUM(M.Price * O.Quantity) AS TotalAmount
+FROM 
+    Customers C
+JOIN 
+    Orders O ON C.CustID = O.CustID
+JOIN 
+    RTables R ON O.TableID = R.TableID
+JOIN 
+    Menu M ON O.ItemID = M.ItemID
+GROUP BY 
+    C.CustID, C.CustName, R.TableID
+ORDER BY 
+    C.CustID;
+SELECT * FROM CustomerOrderSummary;
